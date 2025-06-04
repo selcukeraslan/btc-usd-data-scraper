@@ -1,22 +1,20 @@
-from selenium import webdriver
-from time import sleep
+import csv
+import time
+import requests
 
-file = open('btcusdPrice.csv', 'w')
+API_URL = "https://www.bitstamp.net/api/v2/ticker/btcusd/"
 
-chromeOptions = webdriver.ChromeOptions()
-chromeOptions.add_argument("--incognito")
-chromeOptions.add_argument("-headless")
-driver = webdriver.Chrome(chrome_options=chromeOptions)
-driver.delete_all_cookies()
+with open("btcusdPrice.csv", "a", newline="") as outfile:
+    writer = csv.writer(outfile)
+    try:
+        while True:
+            response = requests.get(API_URL, timeout=10)
+            response.raise_for_status()
+            price = response.json()["last"]
+            print(price)
+            writer.writerow([price])
+            outfile.flush()
+            time.sleep(3)
+    except KeyboardInterrupt:
+        pass
 
-driver.get("https://tr.tradingview.com/chart/?symbol=BITSTAMP%3ABTCUSD")
-driver.implicitly_wait(5)
-while True:
-    price = driver.find_element(
-        "xpath", "/html/body/div[3]/div[6]/div/div[1]/div[1]/div[1]/div[2]/div[2]/div/div[2]/div[5]/span[1]/span[1]").text
-    print(price)
-    file.write(price)
-    file.write("\n")
-    file.flush()
-    sleep(3)
-file.close()
